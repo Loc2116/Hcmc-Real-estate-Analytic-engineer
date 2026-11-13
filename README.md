@@ -7,25 +7,38 @@
 [![Backblaze B2](https://img.shields.io/badge/Data%20Lake-Backblaze%20B2-red.svg)](https://www.backblaze.com/b2)
 [![Data Quality Tests](https://img.shields.io/badge/dbt%20tests-44%20passed%20(100%25)-brightgreen.svg)](https://github.com/Loc2116/Hcmc-Real-estate-Analytic-engineer)
 
-Nền tảng dữ liệu hiện đại (Modern Data Platform) thu thập, lưu trữ, nạp idempotent, mô hình hóa dữ liệu theo kiến trúc **Medallion & Kimball Star Schema**, kiểm thử chất lượng dữ liệu tự động và lập lịch điều phối toàn trình (CI/CD Orchestration) phục vụ phân tích chuyên sâu thị trường Bất động sản TP.HCM.
+> **A Production-Grade, End-to-End Modern Data Platform & Analytics Engineering Project** for Crawling, Storing, Modeling, Testing, and Visualizing Ho Chi Minh City Real Estate Market Data.
 
 ---
 
 ## 📌 MỤC LỤC
-1. [Kiến Trúc Tổng Thể Hệ Thống (ELT Architecture)](#1-kiến-trúc-tổng-thể-hệ-thống-elt-architecture)
-2. [Tech Stack Chuẩn Công Nghiệp](#2-tech-stack-chuẩn-công-nghiệp)
-3. [Mô Hình Hóa Dữ Liệu Star Schema (Kimball Modeling)](#3-mô-hình-hóa-dữ-liệu-star-schema-kimball-modeling)
-4. [Tự Động Hóa & Điều Phối CI/CD (GitHub Actions)](#4-tự-động-hóa--điều-phối-cicd-github-actions)
-5. [Hướng Dẫn Cấu Hình GitHub Secrets](#5-hướng-dẫn-cấu-hình-github-secrets)
-6. [Cài Đặt & Chạy Thử Nghiệm Tại Local](#6-cài-đặt--chạy-thử-nghiệm-tại-local)
-7. [Chất Lượng Dữ Liệu & Kiểm Thử Tự Động (Data Quality)](#7-chất-lượng-dữ-liệu--kiểm-thử-tự-động-data-quality)
-8. [Tài Liệu Kèm Theo](#8-tài-liệu-kèm-theo)
+1. [Giới Thiệu & Bài Toán Nghiệp Vụ (Executive Summary)](#1-giới-thiệu--bài-toán-nghiệp-vụ-executive-summary)
+2. [Kiến Trúc Tổng Thể Hệ Thống (ELT Architecture)](#2-kiến-trúc-tổng-thể-hệ-thống-elt-architecture)
+3. [Điểm Sáng Kỹ Thuật (Key Engineering Highlights)](#3-điểm-sáng-kỹ-thuật-key-engineering-highlights)
+4. [Mô Hình Hóa Dữ Liệu Star Schema (Kimball Modeling)](#4-mô-hình-hóa-dữ-liệu-star-schema-kimball-modeling)
+5. [Chất Lượng Dữ Liệu & Kiểm Thử Tự Động (Data Quality Gate)](#5-chất-lượng-dữ-liệu--kiểm-thử-tự-động-data-quality-gate)
+6. [Tự Động Hóa & Điều Phối Pipeline (CI/CD Orchestration)](#6-tự-động-hóa--điều-phối-pipeline-cicd-orchestration)
+7. [Tech Stack](#7-tech-stack)
+8. [Hướng Dẫn Tái Lập (Quickstart Guide)](#8-hướng-dẫn-tái-lập-quickstart-guide)
+9. [Cấu Trúc Thư Mục Dự Án](#9-cấu-trúc-thư-mục-dự-án)
 
 ---
 
-## 1. KIẾN TRÚC TỔNG THỂ HỆ THỐNG (ELT ARCHITECTURE)
+## 1. GIỚI THIỆU & BÀI TOÁN NGHIỆP VỤ (EXECUTIVE SUMMARY)
 
-Hệ thống được thiết kế theo mô hình **ELT hiện đại (Extract - Load - Transform)**, chia tách độc lập giữa tầng lưu trữ Data Lake, kho dữ liệu phân tích Data Warehouse và tầng biến đổi mô hình hóa dữ liệu:
+Thị trường Bất động sản (BĐS) TP.HCM có giá trị giao dịch lớn nhưng dữ liệu niêm yết trực tuyến phân tán, nhiều tin rác và đặc biệt là tình trạng **nhiều môi giới cùng rao bán một căn nhà vật lý với mức giá và mô tả khác nhau**. 
+
+Dự án này được thiết kế và xây dựng theo chuẩn **Modern Data Stack** bởi một **Full-Stack Analytics Professional (Data Engineer & Analytics Engineer)** nhằm:
+- **Tự động hóa luồng dữ liệu (ELT Pipeline):** Thu thập dữ liệu tin đăng BĐS tự động, chống chặn, lưu trữ Data Lake chuẩn Hive phân vùng, nạp Idempotent vào Data Warehouse và tự động chuyển đổi mô hình dữ liệu.
+- **Giải quyết bài toán Entity Resolution:** Tạo "vân tay số" vật lý (`property_fingerprint`) để gộp trùng các tin đăng chéo giữa nhiều môi giới, phái sinh chỉ số thanh khoản thị trường.
+- **Mô hình hóa Kimball Star Schema:** Thiết kế tầng Marts đa chiều tối ưu cho Business Intelligence và phân tích thị trường (đơn giá/m², biên độ chênh lệch mặt tiền vs hẻm, tương quan diện tích - giá).
+- **Đảm bảo chất lượng dữ liệu 100%:** Kiểm thử tự động 44 tests (Generic & Singular SQL tests) ngăn chặn dữ liệu bẩn vào báo cáo.
+
+---
+
+## 2. KIẾN TRÚC TỔNG THỂ HỆ THỐNG (ELT ARCHITECTURE)
+
+Hệ thống tuân thủ mô hình **ELT (Extract - Load - Transform)** chia tách độc lập giữa tầng lưu trữ Data Lake, kho dữ liệu phân tích Data Warehouse và tầng chuyển đổi dữ liệu:
 
 ```mermaid
 flowchart TD
@@ -41,23 +54,26 @@ flowchart TD
 
 ---
 
-## 2. TECH STACK CHUẨN CÔNG NGHIỆP
+## 3. ĐIỂM SÁNG KỸ THUẬT (KEY ENGINEERING HIGHLIGHTS)
 
-| Tầng kiến trúc | Công nghệ áp dụng | Vai trò & Chi tiết triển khai |
-|---|---|---|
-| **Data Ingestion (DE)** | Python 3.11+, `requests`/`curl_cffi`, `scrapling`, `tenacity`, `pyarrow` | Cào dữ liệu tin đăng BĐS tự động, kháng chặn anti-bot (Cloudflare/WAF), retry exponential backoff, xuất Parquet Snappy phân vùng Hive-style. |
-| **Data Lake (DE)** | **Backblaze B2** (S3-compatible API via `boto3`) | Lưu trữ dữ liệu thô dài hạn chuẩn Hive: `raw/year=YYYY/month=MM/day=DD/*.parquet`. Đồng bộ checkpoint `state/state.json` để chống trùng lặp trên runner stateless. |
-| **Data Warehouse (DE)** | **Google BigQuery** (`google-cloud-bigquery`) | Lưu trữ kho dữ liệu phân tích. Nạp dữ liệu idempotent qua `load_bigquery.py` bằng staging table kết hợp `CREATE OR REPLACE TABLE` với `ROW_NUMBER() OVER (PARTITION BY link ORDER BY crawled_at DESC) = 1` (tương thích 100% với BigQuery Sandbox miễn phí). |
-| **Data Modeling (DE/DA)** | **dbt-bigquery** (dbt Core) | Medallion Architecture: `staging` (view) $\rightarrow$ `intermediate` (view - Entity Resolution) $\rightarrow$ `marts` Star Schema (`fact_listings` dạng table, `dim_location`, `dim_property_specs`, `mart_listings_clean` OBT view). |
-| **Data Quality (DE)** | **dbt test** (Generic & Singular Tests) | Kiểm thử tính toàn vẹn khóa ngoại (`relationships`), tính duy nhất (`unique`), không rỗng (`not_null`), miền giá trị (`accepted_values`), và điều kiện logic thương mại (giá/diện tích dương). |
-| **Orchestration & CI/CD** | **GitHub Actions** | Tự động hóa toàn trình pipeline định kỳ hằng ngày lúc 02:00 AM VN (`cron: '0 19 * * *'` UTC) và hỗ trợ chạy thủ công (`workflow_dispatch`). |
-| **BI & Analytics (DA)** | **Looker Studio / Streamlit / SQL** | Trực quan hóa bản đồ nhiệt giá, phân tích chênh lệch mặt tiền vs hẻm, đánh giá thanh khoản theo quận/huyện. |
+### 🔹 3.1. Crawler Kháng Chặn & Cơ Chế Đồng Bộ Checkpoint 2 Chiều
+- **Chống chặn & Kháng lỗi:** Tích hợp `curl_cffi` giả lập chữ ký trình duyệt (Browser TLS Impersonation) vượt qua Cloudflare/WAF mà không cần headless browser nặng nề; kết hợp thư viện `tenacity` retry tự động với Exponential Backoff.
+- **Đồng bộ Checkpoint trên Stateless CI/CD:** GitHub Actions runner là môi trường xóa sạch ổ cứng sau mỗi lần chạy. Crawler tự động tải file `state/state.json` từ Backblaze B2 về nạp danh sách URL/ID đã quét trước khi cào, và đẩy file checkpoint mới nhất ngược lên B2 sau khi kết thúc $\rightarrow$ **Tránh cào trùng lặp 100% qua các ngày**.
+
+### 🔹 3.2. Idempotent Ingestion Pattern trên BigQuery Sandbox
+- Tương thích hoàn toàn với giới hạn miễn phí của Google BigQuery Sandbox (không hỗ trợ câu lệnh DML `MERGE` partition).
+- Quy trình 3 bước: Nạp batch dữ liệu vào `raw_listings_staging` (`WRITE_TRUNCATE`) $\rightarrow$ Khử trùng và cập nhật bảng chính `raw_listings` bằng `CREATE OR REPLACE TABLE ... ROW_NUMBER() OVER (PARTITION BY link ORDER BY crawled_at DESC) = 1` $\rightarrow$ Xóa bảng staging tạm.
+
+### 🔹 3.3. Entity Resolution — Khử Trùng Lặp Chéo Môi Giới (Broker Deduplication)
+- Nhiều môi giới cùng đăng bán một căn nhà dẫn đến méo mó số liệu thống kê.
+- Tầng Intermediate sử dụng hàm băm `FARM_FINGERPRINT(CONCAT(...))` kết hợp: `listing_type`, `district`, `ward`, `street`, `area_m2`, `floors`, `bedrooms`, `price_billion_vnd` để nhận diện căn nhà vật lý.
+- Phái sinh thước đo `duplicate_broker_count` (số lượng môi giới cùng rao bán căn nhà) — một proxy quan trọng phản ánh áp lực bán và thanh khoản của bất động sản.
 
 ---
 
-## 3. MÔ HÌNH HÓA DỮ LIỆU STAR SCHEMA (KIMBALL MODELING)
+## 4. MÔ HÌNH HÓA DỮ LIỆU STAR SCHEMA (KIMBALL MODELING)
 
-Dữ liệu được chuẩn hóa và mô hình hóa theo cấu trúc **Kimball Star Schema**, 100% tên cột bằng tiếng Anh `snake_case` chuẩn công nghiệp:
+Dữ liệu được tổ chức theo kiến trúc **Medallion & Kimball Dimensional Modeling**, 100% tên cột bằng tiếng Anh `snake_case` chuẩn công nghiệp:
 
 ```text
                ┌────────────────────────┐
@@ -90,139 +106,116 @@ Dữ liệu được chuẩn hóa và mô hình hóa theo cấu trúc **Kimball 
 └────────────────────────────────────────┘
 ```
 
-1. **`fact_listings` (materialized: `table`):** Bảng sự kiện chứa các đại lượng đo lường (Measures: giá, diện tích, đơn giá, độ rộng đường, số tầng, số phòng, v.v.), chỉ số thanh khoản `duplicate_broker_count` và các cờ Missing Indicator.
-2. **`dim_location` (materialized: `table`):** Bảng thứ nguyên vị trí địa lý (`location_key`, `district`, `ward`, `street`).
-3. **`dim_property_specs` (materialized: `table`):** Bảng thứ nguyên quy cách bất động sản (`property_spec_key`, `lane_type`, `legal_status`, `furniture_status`).
-4. **`mart_listings_clean` (materialized: `view`):** Unified One Big Table (OBT) kết hợp `fact_listings` `LEFT JOIN` với 2 bảng Dim, phục vụ truy vấn phân tích trực tiếp cho BI Dashboard và các nhà phân tích dữ liệu.
+- **`fact_listings` (materialized: `table`):** Lưu trữ các độ đo kinh doanh (giá, diện tích, đơn giá/m², chiều rộng đường, số tầng, số phòng, chỉ số trùng lặp môi giới).
+- **`dim_location` (materialized: `table`):** Quản lý thứ nguyên địa giới hành chính (Quận, Phường, Đường). Khóa chính hash từ `district | ward | street`.
+- **`dim_property_specs` (materialized: `table`):** Quản lý thứ nguyên đặc tính pháp lý & quy cách (Loại đường vào, Tình trạng pháp lý, Mức độ nội thất).
+- **`mart_listings_clean` (materialized: `view`):** Bảng phẳng hợp nhất (One Big Table view) kết hợp bảng Fact và 2 bảng Dims phục vụ trực tiếp cho BI Dashboard và phân tích thống kê.
 
 ---
 
-## 4. TỰ ĐỘNG HÓA & ĐIỀU PHỐI CI/CD (GITHUB ACTIONS)
+## 5. CHẤT LƯỢNG DỮ LIỆU & KIỂM THỬ TỰ ĐỘNG (DATA QUALITY GATE)
 
-Pipeline ELT được tự động hóa hoàn toàn bằng **GitHub Actions** tại file [`.github/workflows/elt_pipeline.yml`](.github/workflows/elt_pipeline.yml).
+Dự án thiết lập bộ kiểm thử toàn vẹn dữ liệu tự động gồm **44 tests (100% PASS)** chạy qua `dbt test`:
 
-### 4.1. Cơ chế kích hoạt (Triggers)
-- **Lập lịch tự động (Schedule):** Chạy mỗi ngày vào lúc **02:00 sáng giờ Việt Nam (UTC+7)**, tương ứng `cron: '0 19 * * *'` UTC.
-- **Kích hoạt thủ công (Manual Workflow Dispatch):** Có thể chạy bất kỳ lúc nào qua giao diện GitHub Actions với tùy chọn điều chỉnh số lượng tin đăng cần cào (`crawler_samples`).
-
-### 4.2. Luồng thực thi 9 bước tuần tự trong Runner
-```text
-1. Checkout mã nguồn (actions/checkout@v4)
-2. Cài đặt Python 3.11 (actions/setup-python@v5 với pip cache)
-3. Cài đặt thư viện (pip install -r requirements.txt)
-4. Cấu hình GCP Service Account Credentials (tạo gcp_key.json từ secret GCP_SA_KEY)
-5. Bước 1 - Data Ingestion: Cào tin mới & đồng bộ checkpoint B2 (python scrapling_crawler.py --upload-b2)
-6. Bước 2 - Data Lake to DWH: Nạp idempotent từ B2 vào BigQuery (python load_bigquery.py)
-7. Bước 3 - Transformations: Chạy dbt models (python -m dbt.cli.main run ...)
-8. Bước 4 - Data Quality Gate: Chạy dbt tests (python -m dbt.cli.main test ...)
-9. Bước 5 - Bảo mật: Xóa an toàn file gcp_key.json (luôn chạy if: always())
-```
-
-### 4.3. Cơ chế đồng bộ State Checkpoint chống trùng lặp trên môi trường Stateless
-Vì GitHub Actions runner là môi trường tạm thời (stateless), crawler tích hợp cơ chế tự động:
-1. **Trước khi cào:** Tải file `state/state.json` từ Backblaze B2 về nạp vào bộ nhớ để biết những URL/Property ID đã cào trước đây $\rightarrow$ Ngăn chặn tuyệt đối việc cào lặp lại các bài đăng cũ.
-2. **Sau khi cào:** Đẩy ngược file `state/state.json` mới nhất lên Backblaze B2 $\rightarrow$ Đảm bảo phiên chạy kế tiếp luôn có dữ liệu checkpoint mới nhất.
+1. **Khóa chính & Tính duy nhất (`unique`):** Đảm bảo không trùng lặp khóa chính trên `listing_id`, `location_key`, `property_spec_key`.
+2. **Trường bắt buộc (`not_null`):** Đảm bảo các chỉ số đo lường cốt lõi (giá, diện tích, đơn giá, thời gian) không bị thiếu khuyết.
+3. **Toàn vẹn tham chiếu (`relationships`):** Đảm bảo 100% khóa ngoại trong `fact_listings` trỏ chính xác đến các bản ghi tồn tại trong `dim_location` và `dim_property_specs`.
+4. **Miền giá trị hợp lệ (`accepted_values`):** Ràng buộc giá trị phân loại danh mục (`'Mặt tiền'`, `'Hẻm ô tô'`, `'Hẻm xe máy'`, `'Chưa xác định'`).
+5. **Kiểm thử logic nghiệp vụ (Singular SQL Tests):**
+   - `assert_positive_price_and_area`: Kiểm tra giá niêm yết, diện tích và đơn giá luôn dương ($> 0$).
+   - `assert_valid_hcmc_price_range`: Loại bỏ giá trị phi thực tế trên thị trường BĐS TP.HCM (diện tích $\in [10, 2000]\text{ m}^2$, đơn giá $\in [10, 1000]\text{ triệu VNĐ/m}^2$).
 
 ---
 
-## 5. HƯỚNG DẪN CẤU HÌNH GITHUB SECRETS
+## 6. TỰ ĐỘNG HÓA & ĐIỀU PHỐI PIPELINE (CI/CD ORCHESTRATION)
 
-Để pipeline GitHub Actions có thể chạy thành công, bạn cần khai báo các Secrets sau trong repository GitHub của bạn (**Settings** $\rightarrow$ **Secrets and variables** $\rightarrow$ **Actions** $\rightarrow$ **New repository secret**):
+Pipeline ELT được tự động hóa hoàn toàn thông qua **GitHub Actions** ([`.github/workflows/elt_pipeline.yml`](.github/workflows/elt_pipeline.yml)):
 
-| Tên Secret | Bắt buộc | Mô tả | Giá trị mẫu / Hướng dẫn |
-|---|:---:|---|---|
-| `B2_KEY_ID` | **Có** | Backblaze Application Key ID | Ví dụ: `your_b2_key_id_here` |
-| `B2_APPLICATION_KEY` | **Có** | Backblaze Application Key bí mật | Ví dụ: `your_b2_application_key_here` |
-| `B2_BUCKET_NAME` | **Có** | Tên Bucket Data Lake trên B2 | Ví dụ: `your_b2_bucket_name_here` |
-| `B2_ENDPOINT_URL` | Không | S3 Endpoint của Backblaze B2 | `s3.us-east-005.backblazeb2.com` (mặc định đã có) |
-| `GCP_PROJECT_ID` | **Có** | ID dự án Google Cloud | Ví dụ: `your_gcp_project_id_here` |
-| `BIGQUERY_DATASET` | Không | Tên Dataset BigQuery | `hcmc_real_estate` (mặc định đã có) |
-| `BIGQUERY_LOCATION` | Không | Vùng lưu trữ BigQuery Dataset | `asia-southeast1` (mặc định đã có) |
-| `GCP_SA_KEY` | **Có** | Toàn bộ nội dung JSON file Service Account Key GCP | Mở file Service Account JSON cục bộ, copy toàn bộ nội dung `{ ... }` và paste vào secret này. Workflow hỗ trợ cả JSON thô lẫn chuỗi Base64. |
-
-### Cách kích hoạt chạy thủ công qua GitHub Actions:
-1. Truy cập tab **Actions** trên GitHub repository.
-2. Chọn workflow **HCMC Real Estate ELT Pipeline** ở danh sách bên trái.
-3. Nhấp vào nút **Run workflow**.
-4. Nhập số lượng mẫu tin muốn cào (`crawler_samples`, mặc định là `50`) và bấm **Run workflow**.
+- **Lập lịch tự động (`schedule`):** Chạy định kỳ vào **02:00 sáng (UTC+7)** hằng ngày (`cron: '0 19 * * *'` UTC).
+- **Kích hoạt thủ công (`workflow_dispatch`):** Hỗ trợ nút bấm chạy trực tiếp từ giao diện GitHub với tùy chọn điều chỉnh số lượng tin cào (`crawler_samples`).
+- **Bảo mật thông tin:** Sử dụng GitHub Secrets để quản lý API keys; tự động sinh file tạm `gcp_key.json` cho Service Account và thu hồi/xóa sạch file ngay sau khi pipeline hoàn tất (`if: always()`).
 
 ---
 
-## 6. CÀI ĐẶT & CHẠY THỬ NGHIỆM TẠI LOCAL
+## 7. TECH STACK
 
-### Bước 1 — Chuẩn bị môi trường Python (3.11+)
+| Phân Vùng | Công Nghệ Sử Dụng |
+|---|---|
+| **Data Ingestion** | Python 3.11+, Scrapling, curl_cffi, Tenacity, PyArrow, Pandas |
+| **Data Lake** | Backblaze B2 (S3-compatible API via Boto3) — Phân vùng Hive Apache Parquet |
+| **Data Warehouse** | Google BigQuery (Serverless OLAP DWH) |
+| **Data Transformation** | dbt Core (dbt-bigquery) — Medallion Architecture & Kimball Star Schema |
+| **Data Quality Gate** | dbt test (Generic Tests + Custom Singular Business Rule Tests) |
+| **CI/CD & Orchestration** | GitHub Actions (Cron daily schedule & workflow_dispatch) |
+| **Analytics & BI** | Looker Studio / Streamlit / SQL |
+
+---
+
+## 8. HƯỚNG DẪN TÁI LẬP (QUICKSTART GUIDE)
+
+### Bước 1: Clone Repository & Cài Đặt Thư Viện
 ```bash
-# Tạo môi trường ảo
+git clone https://github.com/Loc2116/Hcmc-Real-estate-Analytic-engineer.git
+cd Hcmc-Real-estate-Analytic-engineer
+
+# Khởi tạo môi trường ảo
 python -m venv .venv
+source .venv/bin/activate  # Trên Windows: .venv\Scripts\activate
 
-# Kích hoạt trên Windows PowerShell:
-.venv\Scripts\activate
-# Hoặc trên Linux/macOS:
-source .venv/bin/activate
-
-# Cài đặt thư viện phụ thuộc
+# Cài đặt dependencies
 pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-### Bước 2 — Cấu hình file `.env`
-Tạo file `.env` tại thư mục gốc của dự án:
-```env
-# BACKBLAZE B2 DATA LAKE
-B2_ENDPOINT_URL=s3.us-east-005.backblazeb2.com
-B2_KEY_ID=your_b2_key_id_here
-B2_APPLICATION_KEY=your_b2_application_key_here
-B2_BUCKET_NAME=your_b2_bucket_name_here
-
-# GOOGLE BIGQUERY DATA WAREHOUSE
-GCP_PROJECT_ID=your_gcp_project_id_here
-BIGQUERY_DATASET=hcmc_real_estate
-BIGQUERY_LOCATION=asia-southeast1
-GOOGLE_APPLICATION_CREDENTIALS=path/to/your/bigquery_key.json
-```
-
-### Bước 3 — Chạy cào dữ liệu và đồng bộ Data Lake (B2)
+### Bước 2: Thiết Lập Biến Môi Trường (.env)
+Sao chép template cấu hình và điền thông tin tài khoản của bạn:
 ```bash
-# Cào 30 tin mới, tự động lưu Parquet Snappy phân vùng Hive và đẩy lên B2
+cp .env.example .env
+```
+*(Chi tiết các biến cần điền: `B2_KEY_ID`, `B2_APPLICATION_KEY`, `B2_BUCKET_NAME`, `GCP_PROJECT_ID`, `BIGQUERY_DATASET`, `GOOGLE_APPLICATION_CREDENTIALS`).*
+
+### Bước 3: Chạy Pipeline
+```bash
+# 1. Cào dữ liệu tin đăng mới & đồng bộ Data Lake Backblaze B2
 python scrapling_crawler.py --samples 30 --upload-b2
-```
 
-### Bước 4 — Nạp dữ liệu Idempotent vào Google BigQuery
-```bash
+# 2. Nạp Idempotent từ Data Lake vào Google BigQuery
 python load_bigquery.py
-```
 
-### Bước 5 — Chạy dbt để biến đổi mô hình Star Schema và kiểm thử
-```bash
-# Chạy chuyển đổi dữ liệu (staging -> intermediate -> marts)
+# 3. Chạy chuyển đổi mô hình Star Schema trên dbt
 python -m dbt.cli.main run --project-dir dbt_hcmc_real_estate --profiles-dir dbt_hcmc_real_estate
 
-# Chạy kiểm thử chất lượng dữ liệu tự động
+# 4. Thực thi kiểm thử chất lượng dữ liệu
 python -m dbt.cli.main test --project-dir dbt_hcmc_real_estate --profiles-dir dbt_hcmc_real_estate
 ```
 
 ---
 
-## 7. CHẤT LƯỢNG DỮ LIỆU & KIỂM THỬ TỰ ĐỘNG (DATA QUALITY)
+## 9. CẤU TRÚC THƯ MỤC DỰ ÁN
 
-Dự án áp dụng bộ kiểm thử chất lượng dữ liệu tự động gồm **44 tests (100% PASS)** được định nghĩa trong `dbt_hcmc_real_estate/models/` và `dbt_hcmc_real_estate/tests/`:
-
-1. **Kiểm thử khóa chính & tính duy nhất (`unique`):** Đảm bảo không trùng lặp bản ghi trên `listing_id`, `location_key`, `property_spec_key`.
-2. **Kiểm thử trường bắt buộc (`not_null`):** Đảm bảo các thuộc tính định danh, giá, diện tích, đơn giá, thời gian không bị rỗng.
-3. **Kiểm thử toàn vẹn tham chiếu (`relationships`):** Đảm bảo mọi khóa ngoại `location_key` và `property_spec_key` trong `fact_listings` đều tồn tại hợp lệ trong các bảng thứ nguyên tương ứng (`dim_location`, `dim_property_specs`).
-4. **Kiểm thử miền giá trị hợp lệ (`accepted_values`):** Ràng buộc kiểu đường vào (`'Mặt tiền'`, `'Hẻm ô tô'`, `'Hẻm xe máy'`, `'Chưa xác định'`), pháp lý và tình trạng nội thất.
-5. **Kiểm thử quy tắc nghiệp vụ (Singular SQL Tests):**
-   - `assert_positive_price_and_area`: Kiểm tra giá niêm yết, diện tích và đơn giá luôn dương ($> 0$).
-   - `assert_valid_hcmc_price_range`: Kiểm soát ngoại lai phi thực tế trên thị trường BĐS TP.HCM (diện tích $\in [10, 2000]\text{ m}^2$, đơn giá $\in [10, 1000]\text{ triệu VNĐ/m}^2$).
+```text
+Hcmc-Real-estate-Analytic-engineer/
+├── .github/workflows/
+│   └── elt_pipeline.yml         # GitHub Actions tự động hóa toàn trình hằng ngày
+├── dbt_hcmc_real_estate/        # Dự án dbt-bigquery chuẩn hóa Star Schema
+│   ├── dbt_project.yml          # Cấu hình dbt Core
+│   ├── profiles.yml             # Cấu hình kết nối BigQuery qua biến môi trường
+│   ├── models/
+│   │   ├── staging/             # Tầng Staging (Regex bóc tách, ép kiểu)
+│   │   ├── intermediate/        # Tầng Intermediate (Entity Resolution gộp môi giới)
+│   │   └── marts/               # Tầng Marts (fact_listings, dim_location, dim_property_specs)
+│   └── tests/                   # Bộ kiểm thử quy tắc nghiệp vụ BĐS
+├── Module/                      # Notebooks nghiên cứu & module cào dữ liệu gốc
+├── .env.example                 # Mẫu cấu hình biến môi trường an toàn
+├── .gitignore                   # Loại trừ toàn bộ credentials, state và dữ liệu nặng
+├── CODEBOOK.md                  # Từ điển dữ liệu chuẩn tiếng Anh (100% English snake_case)
+├── gemini.md                    # File ngữ cảnh kiến trúc hệ thống phục vụ AI & Developers
+├── load_bigquery.py             # Script nạp dữ liệu Idempotent từ B2 vào BigQuery
+├── README.md                    # Tài liệu chính của dự án
+├── requirements.txt             # Danh sách thư viện phụ thuộc
+├── scrapling_crawler.py         # Entrypoint cào dữ liệu & đồng bộ B2
+└── storage_b2.py                # Module quản lý Backblaze B2 Data Lake (S3 API via boto3)
+```
 
 ---
-
-## 8. TÀI LIỆU KÈM THEO
-
-- [CODEBOOK.md](CODEBOOK.md): Data Dictionary & từ điển đặc trưng chi tiết 100% tiếng Anh chuẩn công nghiệp.
-- [GEMINI.md](GEMINI.md): Toàn bộ ngữ cảnh kiến trúc hệ thống, cấu hình B2, BigQuery và định hướng DA/DE.
-- [dbt_hcmc_real_estate/](dbt_hcmc_real_estate/): Mã nguồn dự án dbt Core với mô hình hóa Kimball Star Schema.
-- [Module/](Module/): Các notebook nghiên cứu và module cào dữ liệu gốc.
-
----
-*Dự án cá nhân chuyên nghiệp của một Full-Stack Analytics Professional (Data Engineer & Analytics Engineer).*
+*Dự án Portfolio chuyên nghiệp định hướng Full-Stack Data Engineering & Analytics Engineering.*
