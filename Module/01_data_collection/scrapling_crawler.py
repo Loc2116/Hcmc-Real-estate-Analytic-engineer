@@ -79,72 +79,58 @@ def _resolve_project_path(path: Union[str, Path]) -> Path:
 _SCRAPLING_IMPORT_ERROR = None
 Fetcher = None
 
-# Attempt 1: Standard Scrapling Fetcher (requires patchright)
+# Priority 1: High-resilience curl_cffi with Chrome TLS Impersonation (Bypasses Cloudflare & HTTP 403 WAF)
 try:
-    from scrapling.fetchers import Fetcher
-except Exception as _err1:
-    # Attempt 2: Direct submodule import
-    try:
-        from scrapling.fetchers.requests import Fetcher
-    except Exception as _err2:
-        pass
+    from curl_cffi import requests as c_requests
 
-if Fetcher is None:
-    # Attempt 3: Robust HTTP Fetcher fallback using Selector (Scrapling 0.5+)
-    # This completely eliminates the need for patchright / browser drivers!
     try:
+        from scrapling import Selector as _ParserClass
+    except ImportError:
         try:
-            from scrapling import Selector as _ParserClass
+            from scrapling.parser import Selector as _ParserClass
         except ImportError:
             try:
-                from scrapling.parser import Selector as _ParserClass
+                from scrapling import Adaptor as _ParserClass
             except ImportError:
-                try:
-                    from scrapling import Adaptor as _ParserClass
-                except ImportError:
-                    from parsel import Selector as _ParserClass
+                from parsel import Selector as _ParserClass
 
-        class _AdaptiveHTTPFetcher:
-            """
-            Lightweight HTTP Fetcher fallback.
-            Uses curl_cffi (browser TLS impersonation) or requests,
-            and parses HTML with Scrapling Selector (.css selectors).
-            """
-            @classmethod
-            def get(
-                cls,
-                url: str,
-                headers: Optional[Dict[str, str]] = None,
-                stealthy_headers: bool = True,
-                timeout: float = 20.0,
-                **kwargs,
-            ) -> Any:
-                resp_obj = None
-                try:
-                    from curl_cffi import requests as c_requests
-                    resp_obj = c_requests.get(
-                        url,
-                        headers=headers,
-                        impersonate="chrome124",
-                        timeout=timeout,
-                    )
-                except Exception:
-                    import requests as std_requests
-                    logger.warning(
-                        "curl_cffi is not installed; falling back to standard requests (TLS impersonation disabled). "
-                        "To prevent Cloudflare HTTP 403 blocks, run: pip install curl-cffi"
-                    )
-                    resp_obj = std_requests.get(url, headers=headers, timeout=timeout)
+    class _AdaptiveHTTPFetcher:
+        """
+        Production-grade HTTP Fetcher with Chrome TLS impersonation (curl_cffi).
+        Mimics genuine Chrome JA3/JA4 TLS fingerprints, bypassing Cloudflare WAF HTTP 403 blocks.
+        """
+        @classmethod
+        def get(
+            cls,
+            url: str,
+            headers: Optional[Dict[str, str]] = None,
+            stealthy_headers: bool = True,
+            timeout: float = 20.0,
+            **kwargs,
+        ) -> Any:
+            resp_obj = c_requests.get(
+                url,
+                headers=headers,
+                impersonate="chrome124",
+                timeout=timeout,
+            )
+            page = _ParserClass(resp_obj.text)
+            setattr(page, "status", getattr(resp_obj, "status_code", 200))
+            setattr(page, "status_code", getattr(resp_obj, "status_code", 200))
+            return page
 
-                page = _ParserClass(resp_obj.text)
-                setattr(page, "status", getattr(resp_obj, "status_code", 200))
-                setattr(page, "status_code", getattr(resp_obj, "status_code", 200))
-                return page
-
-        Fetcher = _AdaptiveHTTPFetcher  # type: ignore
-    except Exception as _err3:
-        Fetcher = None  # type: ignore
-        _SCRAPLING_IMPORT_ERROR = _err3
+    Fetcher = _AdaptiveHTTPFetcher
+except Exception as _err_cffi:
+    # Priority 2: Standard Scrapling Fetcher
+    try:
+        from scrapling.fetchers import Fetcher
+    except Exception as _err1:
+        # Priority 3: Direct submodule import
+        try:
+            from scrapling.fetchers.requests import Fetcher
+        except Exception as _err2:
+            Fetcher = None
+            _SCRAPLING_IMPORT_ERROR = _err2 or _err1 or _err_cffi
 
 # -----------------------------------------------------------------------------
 # Configuration & Constants
