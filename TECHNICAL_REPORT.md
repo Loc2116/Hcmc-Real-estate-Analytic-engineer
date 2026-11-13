@@ -94,7 +94,7 @@ flowchart TD
 
 ## 3. TẦNG DATA INGESTION: NGHỆ THUẬT CÀO DỮ LIỆU CHỐNG GÃY & KHÁNG CHẶN
 
-Tệp tin chịu trách nhiệm: [scrapling_crawler.py](file:///c:/Users/ADMIN/Downloads/hcmc-real-estate-price-classification-main/scrapling_crawler.py) & [Module/01_data_collection/scrapling_crawler.py](file:///c:/Users/ADMIN/Downloads/hcmc-real-estate-price-classification-main/Module/01_data_collection/scrapling_crawler.py)
+Tệp tin chịu trách nhiệm: [scrapling_crawler.py](scrapling_crawler.py) & [Module/01_data_collection/scrapling_crawler.py](Module/01_data_collection/scrapling_crawler.py)
 
 ### 3.1. Tại sao loại bỏ hoàn toàn Selenium?
 Nhiều bạn sinh viên quen dùng Selenium vì dễ học. Nhưng trong môi trường production/CI/CD (như GitHub Actions runner):
@@ -124,7 +124,7 @@ def fetch_page_with_retry(url: str, ...) -> Any:
 
 ### 3.3. Cơ chế Cào Tăng Trưởng (Incremental Crawling) & Early Stopping
 Không bao giờ cào lại những tin đã cào!
-- Lớp `IncrementalStateManager` quản lý tệp [state.json](file:///c:/Users/ADMIN/Downloads/hcmc-real-estate-price-classification-main/state.json) lưu danh sách băm của `seen_urls` và `seen_ids`.
+- Lớp `IncrementalStateManager` quản lý tệp `state.json` lưu danh sách băm của `seen_urls` và `seen_ids`.
 - Trước khi truy cập chi tiết 1 bài đăng, hàm `state.is_seen(url)` kiểm tra ngay trong $O(1)$ thời gian.
 - **Early Stopping thông minh (`--early-stop 30`):** Do các tin đăng mới nhất luôn nằm ở trang đầu, nếu duyệt qua 30 tin liên tiếp mà toàn là tin cũ đã có trong kho $\rightarrow$ crawler tự động hiểu rằng hôm nay không còn tin mới nữa và **dừng ngay lập tức**, không quét các trang sau để tiết kiệm băng thông.
 
@@ -138,7 +138,7 @@ Không bao giờ cào lại những tin đã cào!
 
 ## 4. TẦNG DATA LAKE: BACKBLAZE B2 & CHUẨN ĐỊNH DẠNG APACHE PARQUET
 
-Tệp tin chịu trách nhiệm: [storage_b2.py](file:///c:/Users/ADMIN/Downloads/hcmc-real-estate-price-classification-main/storage_b2.py)
+Tệp tin chịu trách nhiệm: [storage_b2.py](storage_b2.py)
 
 ### 4.1. Tại sao dùng Apache Parquet nén Snappy thay vì CSV?
 Nhiều bạn thắc mắc: *"CSV mở bằng Excel được, tại sao kỹ sư dữ liệu lại chuộng Parquet?"*
@@ -178,7 +178,7 @@ $\rightarrow$ Checkpoint được duy trì bền vững mà không cần phải 
 
 ## 5. TẦNG DATA WAREHOUSE: TÍNH LŨY ĐẲNG (IDEMPOTENCY) TRÊN GOOGLE BIGQUERY
 
-Tệp tin chịu trách nhiệm: [load_bigquery.py](file:///c:/Users/ADMIN/Downloads/hcmc-real-estate-price-classification-main/load_bigquery.py)
+Tệp tin chịu trách nhiệm: [load_bigquery.py](load_bigquery.py)
 
 ### 5.1. Khái niệm cốt lõi: Tính Lũy Đẳng (Idempotency) là gì?
 > **Định nghĩa:** Một tác vụ được gọi là **Lũy đẳng (Idempotent)** nếu việc thực thi tác vụ đó 1 lần hay 100 lần liên tiếp với cùng một dữ liệu đầu vào đều cho ra **chính xác một kết quả cuối cùng giống nhau**, không gây ra lỗi hay làm nhân đôi dữ liệu.
@@ -215,7 +215,7 @@ Dự án áp dụng mẫu thiết kế 2 giai đoạn (Two-phase Staging Pattern
 
 ## 6. TẦNG DATA TRANSFORMATION: MEDALLION ARCHITECTURE & ENTITY RESOLUTION VỚI DBT
 
-Thư mục chịu trách nhiệm: [dbt_hcmc_real_estate/](file:///c:/Users/ADMIN/Downloads/hcmc-real-estate-price-classification-main/dbt_hcmc_real_estate/)
+Thư mục chịu trách nhiệm: [dbt_hcmc_real_estate/](dbt_hcmc_real_estate/)
 
 ### 6.1. Kiến Trúc Medallion (Huy Chương)
 Hệ thống biến đổi dữ liệu được chia làm 3 tầng ranh giới rõ ràng:
@@ -298,7 +298,7 @@ FARM_FINGERPRINT(
 
 ## 8. DATA QUALITY GATES: BỘ 44 KIỂM THỬ TOÀN VẸN TỰ ĐỘNG
 
-Thư mục chịu trách nhiệm: [dbt_hcmc_real_estate/tests/](file:///c:/Users/ADMIN/Downloads/hcmc-real-estate-price-classification-main/dbt_hcmc_real_estate/tests/) & các file `schema.yml`
+Thư mục chịu trách nhiệm: [dbt_hcmc_real_estate/tests/](dbt_hcmc_real_estate/tests/) & các file `schema.yml`
 
 Trong kỹ thuật dữ liệu, châm ngôn hàng đầu là: **"Garbage In, Garbage Out"** (Nếu đầu vào là rác thì kết quả báo cáo phân tích cũng chỉ là rác). Để bảo vệ người dùng và Dashboard, dự án thiết lập hàng rào kiểm thử tự động gồm **44 tests (100% PASS)**:
 
@@ -309,9 +309,9 @@ Trong kỹ thuật dữ liệu, châm ngôn hàng đầu là: **"Garbage In, Gar
 - **`accepted_values`:** Ràng buộc giá trị hợp lệ, ví dụ `lane_type` chỉ được phép nhận 1 trong 4 giá trị: `['Mặt tiền', 'Hẻm ô tô', 'Hẻm xe máy', 'Chưa xác định']`.
 
 ### 8.2. Kiểm thử logic nghiệp vụ (Singular Tests viết bằng SQL):
-- **[assert_positive_price_and_area.sql](file:///c:/Users/ADMIN/Downloads/hcmc-real-estate-price-classification-main/dbt_hcmc_real_estate/tests/assert_positive_price_and_area.sql):**
+- **[assert_positive_price_and_area.sql](dbt_hcmc_real_estate/tests/assert_positive_price_and_area.sql):**
   Kiểm tra không bao giờ tồn tại bản ghi có giá tiền hoặc diện tích $\le 0$.
-- **[assert_valid_hcmc_price_range.sql](file:///c:/Users/ADMIN/Downloads/hcmc-real-estate-price-classification-main/dbt_hcmc_real_estate/tests/assert_valid_hcmc_price_range.sql):**
+- **[assert_valid_hcmc_price_range.sql](dbt_hcmc_real_estate/tests/assert_valid_hcmc_price_range.sql):**
   Bắt và loại bỏ các giá trị dị biệt (outliers phi lý) trên thị trường BĐS TP.HCM: Diện tích bắt buộc nằm trong khoảng $[10, 2000]\text{ m}^2$, đơn giá thị trường nằm trong khoảng $[10, 1000]\text{ triệu VNĐ/m}^2$.
 
 Nếu bất kỳ bài test nào trong số 44 bài test này bị `FAIL`, tiến trình CI/CD sẽ lập tức dừng lại, gửi cảnh báo đỏ và ngăn không cho dữ liệu lỗi được đẩy ra Dashboard.
@@ -320,7 +320,7 @@ Nếu bất kỳ bài test nào trong số 44 bài test này bị `FAIL`, tiến
 
 ## 9. ĐIỀU PHỐI CI/CD TỰ ĐỘNG VỚI GITHUB ACTIONS
 
-Tệp tin chịu trách nhiệm: [.github/workflows/elt_pipeline.yml](file:///c:/Users/ADMIN/Downloads/hcmc-real-estate-price-classification-main/.github/workflows/elt_pipeline.yml)
+Tệp tin chịu trách nhiệm: [.github/workflows/elt_pipeline.yml](.github/workflows/elt_pipeline.yml)
 
 Hệ thống vận hành hoàn toàn không cần can thiệp của con người (Zero-maintenance Serverless Pipeline):
 1. **Lập lịch tự động (Schedule Cron):**
@@ -378,3 +378,4 @@ Khi nhà tuyển dụng phỏng vấn về dự án này, đây là cách bạn 
 
 ---
 *Tài liệu được biên soạn phục vụ mục đích học tập, nghiên cứu kỹ thuật dữ liệu và chuẩn bị hồ sơ phỏng vấn chuyên nghiệp.*
+
