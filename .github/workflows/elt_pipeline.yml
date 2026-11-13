@@ -9,7 +9,7 @@ on:
       crawler_samples:
         description: 'Số lượng tin đăng mới cần cào (samples)'
         required: false
-        default: '50'
+        default: '100'
         type: string
 
 permissions:
@@ -69,7 +69,7 @@ jobs:
 
       - name: 5. Extract & Load to Data Lake (Crawler -> Backblaze B2)
         run: |
-          SAMPLES="${{ inputs.crawler_samples || '50' }}"
+          SAMPLES="${{ inputs.crawler_samples || '100' }}"
           echo "Starting Scrapling Crawler with target $SAMPLES samples and auto B2 sync..."
           python scrapling_crawler.py --samples "$SAMPLES" --upload-b2
 
