@@ -148,7 +148,7 @@ USER_AGENTS = [
 ]
 
 # Defaults shared by crawl_pipeline() and CLI
-DEFAULT_EARLY_STOP_THRESHOLD = 15   # VIP listings pinned at top of page 1 must not trigger premature stop
+DEFAULT_EARLY_STOP_THRESHOLD = 100  # Pinned VIP listings across pages 1-3 (~75 items) must not trigger premature stop
 DEFAULT_BATCH_FLUSH = 10            # Checkpoint to disk every N new listings
 DEFAULT_MAX_BAD_PAGES = 3           # Consecutive failed/empty catalog pages before halting
 REQUEST_TIMEOUT = 20.0              # Seconds, explicit per-request timeout
