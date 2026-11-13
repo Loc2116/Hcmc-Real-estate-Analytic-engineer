@@ -930,6 +930,7 @@ def crawl_pipeline(
     output_dir: Union[str, Path] = "data_1/Raw",
     state_file: Union[str, Path] = "state.json",
     early_stop_threshold: int = DEFAULT_EARLY_STOP_THRESHOLD,
+    start_page: int = 1,
     min_delay: float = 1.5,
     max_delay: float = 3.5,
     batch_flush: int = DEFAULT_BATCH_FLUSH,
@@ -966,8 +967,9 @@ def crawl_pipeline(
     if early_stopping_limit is not None:
         early_stop_threshold = early_stopping_limit
     batch_flush = max(1, int(batch_flush))
-    early_stop_threshold = max(1, int(early_stop_threshold))
+    early_stop_threshold = max(0, int(early_stop_threshold))
     max_bad_pages = max(1, int(max_bad_pages))
+    start_page = max(1, int(start_page))
 
     if fetcher is None and Fetcher is None:
         raise ImportError(
@@ -1003,8 +1005,8 @@ def crawl_pipeline(
     consecutive_bad_pages = 0
     last_flush_count = 0
     stop_reason: Optional[str] = None
-    page = 1
-    max_pages = max(100, (target_samples // 20) + 10)
+    page = start_page
+    max_pages = max(page + 100, page + (target_samples // 20) + 20)
     df_raw, df_filled = pd.DataFrame(), pd.DataFrame()
 
     logger.info(
@@ -1045,12 +1047,13 @@ def crawl_pipeline(
                 if state.is_seen(url):
                     consecutive_duplicates += 1
                     stats.skipped_duplicates += 1
+                    threshold_str = str(early_stop_threshold) if early_stop_threshold > 0 else "disabled"
                     logger.info(
                         f"[DUPLICATE] Listing '{url}' already crawled. "
-                        f"Consecutive duplicate count: {consecutive_duplicates}/{early_stop_threshold}"
+                        f"Consecutive duplicate count: {consecutive_duplicates}/{threshold_str}"
                     )
 
-                    if consecutive_duplicates >= early_stop_threshold:
+                    if early_stop_threshold > 0 and consecutive_duplicates >= early_stop_threshold:
                         logger.warning(
                             f"🛑 EARLY STOPPING TRIGGERED: Reached {consecutive_duplicates} consecutive duplicates. "
                             "No new listings found in recent feed. Halting crawler."
@@ -1172,11 +1175,12 @@ def build_arg_parser():
 
     parser = argparse.ArgumentParser(description="HCMC Real Estate Incremental & Fault-tolerant Parquet Crawler")
     parser.add_argument("--samples", type=int, default=20, help="Target new listings to crawl (default: 20)")
+    parser.add_argument("--start-page", type=int, default=1, help="Catalog page to start crawling from (default: 1)")
     parser.add_argument("--output-dir", type=str, default="data_1/Raw",
                         help="Base output directory for Hive Parquet files (default: data_1/Raw)")
     parser.add_argument("--state-file", type=str, default="state.json", help="Path to state tracking JSON file")
     parser.add_argument("--early-stop", type=int, default=DEFAULT_EARLY_STOP_THRESHOLD,
-                        help="Consecutive duplicates limit for early stopping (default: 15)")
+                        help="Consecutive duplicates limit for early stopping (default: 15, set 0 to disable for deep backfill)")
     parser.add_argument("--min-delay", type=float, default=1.5, help="Min delay between requests (seconds)")
     parser.add_argument("--max-delay", type=float, default=3.5, help="Max delay between requests (seconds)")
     parser.add_argument("--batch-flush", type=int, default=DEFAULT_BATCH_FLUSH,
@@ -1199,6 +1203,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         output_dir=args.output_dir,
         state_file=args.state_file,
         early_stop_threshold=args.early_stop,
+        start_page=args.start_page,
         min_delay=args.min_delay,
         max_delay=args.max_delay,
         batch_flush=args.batch_flush,
