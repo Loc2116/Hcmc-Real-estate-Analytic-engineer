@@ -238,8 +238,8 @@ Dự án mô hình hóa dữ liệu theo cấu trúc **Kimball Star Schema** t�
 
 ## 7. QUY ƯỚC PHÁT TRIỂN & CÁC BƯỚC TIẾP THEO
 
-- **Tương tác Data Lake:** Mọi thao tác tải lên/tải xuống Backblaze B2 phải thông qua [storage_b2.py](file:///c:/Users/ADMIN/Downloads/hcmc-real-estate-price-classification-main/storage_b2.py).
-- **Tính Idempotent BigQuery:** Nạp dữ liệu vào Google BigQuery thông qua [load_bigquery.py](file:///c:/Users/ADMIN/Downloads/hcmc-real-estate-price-classification-main/load_bigquery.py). Sử dụng bảng staging `raw_listings_staging` kết hợp `CREATE OR REPLACE TABLE` với `ROW_NUMBER() OVER (PARTITION BY link ORDER BY crawled_at DESC) = 1` để tránh duplicate bản ghi và chạy an toàn trên BigQuery Sandbox miễn phí.
+- **Tương tác Data Lake:** Mọi thao tác tải lên/tải xuống Backblaze B2 phải thông qua [storage_b2.py](storage_b2.py).
+- **Tính Idempotent BigQuery:** Nạp dữ liệu vào Google BigQuery thông qua [load_bigquery.py](load_bigquery.py). Sử dụng bảng staging `raw_listings_staging` kết hợp `CREATE OR REPLACE TABLE` với `ROW_NUMBER() OVER (PARTITION BY link ORDER BY crawled_at DESC) = 1` để tránh duplicate bản ghi và chạy an toàn trên BigQuery Sandbox miễn phí.
 - **Dữ liệu mới (`data_1/Raw/`):** Thu thập trực tiếp dưới định dạng Apache Parquet (Snappy) phân vùng Hive-style `year=YYYY/month=MM/day=DD/listings_<timestamp>.parquet`.
 - **Chạy nạp BigQuery:**
   ```bash
