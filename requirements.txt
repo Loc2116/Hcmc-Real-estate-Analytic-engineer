@@ -36,8 +36,8 @@ dbt-bigquery>=1.8.0
 
 # --- Jupyter ---
 notebook
-ipykernel==7.2.0
-ipython==9.12.0
+ipykernel>=7.0.0
+ipython>=8.20.0
 
 # --- Crawler & Extraction ---
 # Lưu ý: undetected-chromedriver tự tải ChromeDriver khi chạy lần đầu
