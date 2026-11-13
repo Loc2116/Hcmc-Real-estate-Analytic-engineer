@@ -1,11 +1,11 @@
 # 🏙️ HCMC Real Estate Modern Data Platform & Full-Stack Analytics (DE + DA)
 
-[![HCMC Real Estate ELT Pipeline](https://github.com/YOUR_GITHUB_USERNAME/YOUR_REPOSITORY/actions/workflows/elt_pipeline.yml/badge.svg)](https://github.com/YOUR_GITHUB_USERNAME/YOUR_REPOSITORY/actions/workflows/elt_pipeline.yml)
+[![HCMC Real Estate ELT Pipeline](https://github.com/Loc2116/Hcmc-Real-estate-Analytic-engineer/actions/workflows/elt_pipeline.yml/badge.svg)](https://github.com/Loc2116/Hcmc-Real-estate-Analytic-engineer/actions/workflows/elt_pipeline.yml)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![dbt-bigquery 1.8+](https://img.shields.io/badge/dbt--bigquery-1.8+-orange.svg)](https://www.getdbt.com/)
 [![Google BigQuery](https://img.shields.io/badge/Data%20Warehouse-Google%20BigQuery-4285F4.svg)](https://cloud.google.com/bigquery)
 [![Backblaze B2](https://img.shields.io/badge/Data%20Lake-Backblaze%20B2-red.svg)](https://www.backblaze.com/b2)
-[![Data Quality Tests](https://img.shields.io/badge/dbt%20tests-44%20passed%20(100%25)-brightgreen.svg)](https://github.com/YOUR_GITHUB_USERNAME/YOUR_REPOSITORY)
+[![Data Quality Tests](https://img.shields.io/badge/dbt%20tests-44%20passed%20(100%25)-brightgreen.svg)](https://github.com/Loc2116/Hcmc-Real-estate-Analytic-engineer)
 
 Nền tảng dữ liệu hiện đại (Modern Data Platform) thu thập, lưu trữ, nạp idempotent, mô hình hóa dữ liệu theo kiến trúc **Medallion & Kimball Star Schema**, kiểm thử chất lượng dữ liệu tự động và lập lịch điều phối toàn trình (CI/CD Orchestration) phục vụ phân tích chuyên sâu thị trường Bất động sản TP.HCM.
 
