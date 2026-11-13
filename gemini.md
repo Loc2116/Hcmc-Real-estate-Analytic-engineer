@@ -42,14 +42,14 @@ File `.env` nằm tại thư mục gốc của dự án (đã được cấu hì
 ```env
 # BACKBLAZE B2 (DATA LAKE)
 B2_ENDPOINT_URL=s3.us-east-005.backblazeb2.com
-B2_KEY_ID=005017f7fd53c670000000001
-B2_APPLICATION_KEY=K005Htvuq2zCE0oDQYgZxlB0TYl2TTM
-B2_BUCKET_NAME=hcmc-real-estate-price-classification
+B2_KEY_ID=your_b2_key_id_here
+B2_APPLICATION_KEY=your_b2_application_key_here
+B2_BUCKET_NAME=your_b2_bucket_name_here
 
 # GOOGLE BIGQUERY (DATA WAREHOUSE)
-GCP_PROJECT_ID=hcmcrealestatepriceclf
+GCP_PROJECT_ID=your_gcp_project_id_here
 BIGQUERY_DATASET=hcmc_real_estate
-GOOGLE_APPLICATION_CREDENTIALS=C:\Users\ADMIN\Downloads\hcmc-real-estate-price-classification-main\bigquery_key.json
+GOOGLE_APPLICATION_CREDENTIALS=bigquery_key.json
 ```
 
 ### 3.2. Cấu trúc phân vùng Hive-style trên B2

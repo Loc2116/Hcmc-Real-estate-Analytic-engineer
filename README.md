@@ -29,14 +29,14 @@ Hệ thống được thiết kế theo mô hình **ELT hiện đại (Extract -
 
 ```mermaid
 flowchart TD
-    A["batdongsan.com.vn\n(scrapling_crawler.py)"] -->|Apache Parquet Snappy\nHive Partitioning| B["Data Lake: Backblaze B2\n(raw/year=YYYY/month=MM/day=DD/)"]
-    B -->|load_bigquery.py\nWRITE_TRUNCATE| C["BigQuery Staging Table\n(raw_listings_staging)"]
-    C -->|Idempotent Deduplication\nROW_NUMBER() OVER link| D["BigQuery Raw Table\n(raw_listings)"]
-    D -->|dbt-bigquery\nstaging view| E["dbt Staging View\n(stg_listings)"]
-    E -->|dbt-bigquery\nEntity Resolution| F["dbt Intermediate View\n(int_listings_deduplicated)"]
-    F -->|dbt-bigquery\nKimball Star Schema| G["dbt Marts Star Schema\n- fact_listings (table)\n- dim_location (table)\n- dim_property_specs (table)\n- mart_listings_clean (OBT view)"]
-    G -->|dbt test Quality Gate| H["Bộ 44 Kiểm thử tự động\n(Generic + Singular Tests: 100% PASS)"]
-    H -->|Direct SQL Query & BI Connectors| I["Hệ thống BI & Analytics\n- Looker Studio Dashboard\n- Streamlit Market Explorer\n- Phân tích Bản đồ nhiệt & Thanh khoản"]
+    A["batdongsan.com.vn<br/>(scrapling_crawler.py)"] -->|"Parquet Snappy<br/>Hive Partitioning"| B["Data Lake: Backblaze B2<br/>(raw/year=YYYY/month=MM/day=DD/)"]
+    B -->|"WRITE_TRUNCATE"| C["BigQuery Staging Table<br/>(raw_listings_staging)"]
+    C -->|"Idempotent Deduplication<br/>ROW_NUMBER by link"| D["BigQuery Raw Table<br/>(raw_listings)"]
+    D -->|"dbt staging view"| E["dbt Staging View<br/>(stg_listings)"]
+    E -->|"Entity Resolution"| F["dbt Intermediate View<br/>(int_listings_deduplicated)"]
+    F -->|"Kimball Star Schema"| G["dbt Marts Star Schema<br/>- fact_listings (table)<br/>- dim_location (table)<br/>- dim_property_specs (table)<br/>- mart_listings_clean (OBT view)"]
+    G -->|"dbt test Quality Gate"| H["Bộ 44 Kiểm thử tự động<br/>(100% PASS)"]
+    H -->|"Direct SQL & BI Connectors"| I["Hệ thống BI & Analytics<br/>- Looker Studio Dashboard<br/>- Streamlit Market Explorer<br/>- Phân tích Bản đồ nhiệt & Thanh khoản"]
 ```
 
 ---
@@ -131,14 +131,14 @@ Vì GitHub Actions runner là môi trường tạm thời (stateless), crawler t
 
 | Tên Secret | Bắt buộc | Mô tả | Giá trị mẫu / Hướng dẫn |
 |---|:---:|---|---|
-| `B2_KEY_ID` | **Có** | Backblaze Application Key ID | Ví dụ: `005017f7fd53c670000000001` |
-| `B2_APPLICATION_KEY` | **Có** | Backblaze Application Key bí mật | Ví dụ: `K005Htvuq2zCE0oDQYgZxlB0TYl2TTM` |
-| `B2_BUCKET_NAME` | **Có** | Tên Bucket Data Lake trên B2 | `hcmc-real-estate-price-classification` |
+| `B2_KEY_ID` | **Có** | Backblaze Application Key ID | Ví dụ: `your_b2_key_id_here` |
+| `B2_APPLICATION_KEY` | **Có** | Backblaze Application Key bí mật | Ví dụ: `your_b2_application_key_here` |
+| `B2_BUCKET_NAME` | **Có** | Tên Bucket Data Lake trên B2 | Ví dụ: `your_b2_bucket_name_here` |
 | `B2_ENDPOINT_URL` | Không | S3 Endpoint của Backblaze B2 | `s3.us-east-005.backblazeb2.com` (mặc định đã có) |
-| `GCP_PROJECT_ID` | **Có** | ID dự án Google Cloud | `hcmcrealestatepriceclf` |
+| `GCP_PROJECT_ID` | **Có** | ID dự án Google Cloud | Ví dụ: `your_gcp_project_id_here` |
 | `BIGQUERY_DATASET` | Không | Tên Dataset BigQuery | `hcmc_real_estate` (mặc định đã có) |
 | `BIGQUERY_LOCATION` | Không | Vùng lưu trữ BigQuery Dataset | `asia-southeast1` (mặc định đã có) |
-| `GCP_SA_KEY` | **Có** | Toàn bộ nội dung JSON file Service Account Key GCP | Mở file `bigquery_key.json` cục bộ, copy toàn bộ nội dung `{ ... }` và paste vào secret này. Workflow hỗ trợ cả JSON thô lẫn chuỗi Base64. |
+| `GCP_SA_KEY` | **Có** | Toàn bộ nội dung JSON file Service Account Key GCP | Mở file Service Account JSON cục bộ, copy toàn bộ nội dung `{ ... }` và paste vào secret này. Workflow hỗ trợ cả JSON thô lẫn chuỗi Base64. |
 
 ### Cách kích hoạt chạy thủ công qua GitHub Actions:
 1. Truy cập tab **Actions** trên GitHub repository.
@@ -170,15 +170,15 @@ Tạo file `.env` tại thư mục gốc của dự án:
 ```env
 # BACKBLAZE B2 DATA LAKE
 B2_ENDPOINT_URL=s3.us-east-005.backblazeb2.com
-B2_KEY_ID=005017f7fd53c670000000001
+B2_KEY_ID=your_b2_key_id_here
 B2_APPLICATION_KEY=your_b2_application_key_here
-B2_BUCKET_NAME=hcmc-real-estate-price-classification
+B2_BUCKET_NAME=your_b2_bucket_name_here
 
 # GOOGLE BIGQUERY DATA WAREHOUSE
-GCP_PROJECT_ID=hcmcrealestatepriceclf
+GCP_PROJECT_ID=your_gcp_project_id_here
 BIGQUERY_DATASET=hcmc_real_estate
 BIGQUERY_LOCATION=asia-southeast1
-GOOGLE_APPLICATION_CREDENTIALS=bigquery_key.json
+GOOGLE_APPLICATION_CREDENTIALS=path/to/your/bigquery_key.json
 ```
 
 ### Bước 3 — Chạy cào dữ liệu và đồng bộ Data Lake (B2)
