@@ -19,6 +19,7 @@ gcp_key.json
 data/
 data_0/
 data_1/
+data_exports/
 state.json
 *.parquet
 *.csv
