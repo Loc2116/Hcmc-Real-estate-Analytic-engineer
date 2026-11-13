@@ -218,4 +218,3 @@ Hcmc-Real-estate-Analytic-engineer/
 ```
 
 ---
-*Dự án Portfolio chuyên nghiệp định hướng Full-Stack Data Engineering & Analytics Engineering.*
