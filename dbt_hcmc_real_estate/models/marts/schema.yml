@@ -1,0 +1,114 @@
+version: 2
+
+models:
+  - name: dim_location
+    description: "Dimension table containing distinct geographic locations in HCMC."
+    columns:
+      - name: location_key
+        description: "Primary surrogate key (hash) for distinct district, ward, and street combination."
+        tests:
+          - unique
+          - not_null
+
+  - name: dim_property_specs
+    description: "Dimension table containing distinct property attributes (lane type, legal status, furniture)."
+    columns:
+      - name: property_spec_key
+        description: "Primary surrogate key (hash) for distinct property specifications."
+        tests:
+          - unique
+          - not_null
+      - name: lane_type
+        description: "Classification of lane/street type."
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Mặt tiền', 'Hẻm ô tô', 'Hẻm xe máy', 'Chưa xác định']
+      - name: legal_status
+        description: "Legal ownership status of the property."
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Sổ hồng', 'Sổ đỏ', 'Không có']
+
+  - name: fact_listings
+    description: "Core fact table storing cleaned listing transactions, pricing metrics, and property measures."
+    columns:
+      - name: listing_id
+        description: "Primary key of the fact listing (property fingerprint)."
+        tests:
+          - unique
+          - not_null
+      - name: location_key
+        description: "Foreign key referencing dim_location."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_location')
+              field: location_key
+      - name: property_spec_key
+        description: "Foreign key referencing dim_property_specs."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_property_specs')
+              field: property_spec_key
+      - name: price_billion_vnd
+        description: "Listing price in billion VND."
+        tests:
+          - not_null
+      - name: area_m2
+        description: "Land/usable area in m²."
+        tests:
+          - not_null
+      - name: price_per_m2
+        description: "Unit price in million VND per m²."
+        tests:
+          - not_null
+      - name: duplicate_broker_count
+        description: "Count of broker listings associated with this distinct physical property."
+        tests:
+          - not_null
+      - name: is_lane_type_missing
+        description: "Binary missing indicator flag for lane_type (1 if missing/unspecified, 0 otherwise)."
+        tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1]
+              quote: false
+      - name: is_lane_width_missing
+        description: "Binary missing indicator flag for lane_width_m (1 if missing, 0 otherwise)."
+        tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1]
+              quote: false
+
+  - name: mart_listings_clean
+    description: "Unified flat view (One Big Table) joining fact_listings with dim_location and dim_property_specs."
+    columns:
+      - name: listing_id
+        description: "Primary key identifier."
+        tests:
+          - unique
+          - not_null
+      - name: price_billion_vnd
+        description: "Listing price in billion VND."
+        tests:
+          - not_null
+      - name: area_m2
+        description: "Area in m²."
+        tests:
+          - not_null
+      - name: price_per_m2
+        description: "Unit price in million VND per m²."
+        tests:
+          - not_null
+      - name: is_lane_type_missing
+        description: "Binary missing indicator flag for lane_type."
+        tests:
+          - not_null
+      - name: is_lane_width_missing
+        description: "Binary missing indicator flag for lane_width_m."
+        tests:
+          - not_null

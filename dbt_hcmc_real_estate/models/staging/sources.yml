@@ -1,0 +1,61 @@
+version: 2
+
+sources:
+  - name: raw_data
+    description: "Raw real estate data ingested from batdongsan.com.vn via Backblaze B2 into Google BigQuery."
+    database: "{{ env_var('GCP_PROJECT_ID') }}"
+    schema: "{{ env_var('BIGQUERY_DATASET') }}"
+    tables:
+      - name: raw_listings
+        description: "Raw listings table deduplicated by natural key (link) with latest crawled_at timestamp."
+        columns:
+          - name: link
+            description: "Unique URL / listing natural key"
+            tests:
+              - unique
+              - not_null
+          - name: ma_tin
+            description: "Property listing ID from batdongsan.com.vn"
+          - name: tieu_de
+            description: "Listing title text"
+          - name: dia_chi
+            description: "Full text address line"
+          - name: khoang_gia
+            description: "Raw price string"
+          - name: dien_tich
+            description: "Raw area string"
+          - name: mat_tien
+            description: "Frontage width string"
+          - name: duong_vao
+            description: "Entrance lane/street width string"
+          - name: so_phong_ngu
+            description: "Number of bedrooms string"
+          - name: so_phong_tam_ve_sinh
+            description: "Number of bathrooms / toilets string"
+          - name: so_tang
+            description: "Number of floors string"
+          - name: huong_nha
+            description: "House orientation"
+          - name: huong_ban_cong
+            description: "Balcony orientation"
+          - name: phap_ly
+            description: "Legal status string"
+          - name: noi_that
+            description: "Furniture condition string"
+          - name: ngay_dang
+            description: "Date listing was posted"
+          - name: ngay_het_han
+            description: "Expiration date"
+          - name: loai_tin
+            description: "Listing classification tier"
+          - name: latitude
+            description: "Latitude coordinate from map embed"
+          - name: longitude
+            description: "Longitude coordinate from map embed"
+          - name: mo_ta
+            description: "Detailed description free text"
+          - name: crawled_at
+            description: "ISO-8601 UTC timestamp when record was ingested"
+            tests:
+              - not_null
+

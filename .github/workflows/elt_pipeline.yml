@@ -1,0 +1,97 @@
+name: HCMC Real Estate ELT Pipeline
+
+on:
+  schedule:
+    # Chạy tự động lúc 02:00 sáng giờ Việt Nam (UTC+7) = 19:00 UTC hằng ngày
+    - cron: '0 19 * * *'
+  workflow_dispatch:
+    inputs:
+      crawler_samples:
+        description: 'Số lượng tin đăng mới cần cào (samples)'
+        required: false
+        default: '50'
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  elt_daily_sync:
+    name: Daily ELT Pipeline (Extract -> B2 Lake -> BigQuery -> dbt Star Schema)
+    runs-on: ubuntu-latest
+
+    env:
+      # Backblaze B2 (Data Lake)
+      B2_ENDPOINT_URL: ${{ secrets.B2_ENDPOINT_URL || 's3.us-east-005.backblazeb2.com' }}
+      B2_KEY_ID: ${{ secrets.B2_KEY_ID }}
+      B2_APPLICATION_KEY: ${{ secrets.B2_APPLICATION_KEY }}
+      B2_BUCKET_NAME: ${{ secrets.B2_BUCKET_NAME }}
+
+      # Google BigQuery (Data Warehouse)
+      GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+      BIGQUERY_DATASET: ${{ secrets.BIGQUERY_DATASET || 'hcmc_real_estate' }}
+      BIGQUERY_LOCATION: ${{ secrets.BIGQUERY_LOCATION || 'asia-southeast1' }}
+      GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/gcp_key.json
+
+    steps:
+      - name: 1. Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 2. Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: 3. Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: 4. Configure Google Cloud Credentials
+        env:
+          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+        run: |
+          if [ -z "$GCP_SA_KEY" ]; then
+            echo "::error::Secret GCP_SA_KEY is empty or missing! Please configure GCP_SA_KEY in repository secrets."
+            exit 1
+          fi
+
+          # Support both raw JSON and base64-encoded service account key
+          if echo "$GCP_SA_KEY" | grep -q '^{' ; then
+            echo "$GCP_SA_KEY" > "${{ github.workspace }}/gcp_key.json"
+          else
+            echo "$GCP_SA_KEY" | base64 --decode > "${{ github.workspace }}/gcp_key.json"
+          fi
+
+          chmod 600 "${{ github.workspace }}/gcp_key.json"
+          echo "GCP Service Account key created successfully at ${{ github.workspace }}/gcp_key.json"
+
+      - name: 5. Extract & Load to Data Lake (Crawler -> Backblaze B2)
+        run: |
+          SAMPLES="${{ inputs.crawler_samples || '50' }}"
+          echo "Starting Scrapling Crawler with target $SAMPLES samples and auto B2 sync..."
+          python scrapling_crawler.py --samples "$SAMPLES" --upload-b2
+
+      - name: 6. Load to Data Warehouse (Backblaze B2 -> Google BigQuery)
+        run: |
+          echo "Loading new Parquet partitions from Backblaze B2 into BigQuery staging & raw_listings..."
+          python load_bigquery.py
+
+      - name: 7. Transform Data with dbt-bigquery (Medallion & Star Schema)
+        run: |
+          echo "Running dbt transformations (stg_listings -> int_listings_deduplicated -> marts Star Schema)..."
+          python -m dbt.cli.main run --project-dir dbt_hcmc_real_estate --profiles-dir dbt_hcmc_real_estate
+
+      - name: 8. Execute Data Quality Tests (dbt test)
+        run: |
+          echo "Executing automated data quality tests across staging, intermediate, and marts..."
+          python -m dbt.cli.main test --project-dir dbt_hcmc_real_estate --profiles-dir dbt_hcmc_real_estate
+
+      - name: 9. Cleanup Credentials
+        if: always()
+        run: |
+          echo "Cleaning up temporary credentials..."
+          rm -f "${{ github.workspace }}/gcp_key.json"
+          echo "Credentials file removed."
+

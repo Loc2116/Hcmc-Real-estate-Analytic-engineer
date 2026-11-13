@@ -1,0 +1,86 @@
+# =============================================================================
+# ENVIRONMENT & SENSITIVE SECRETS (Bảo mật thông tin xác thực)
+# =============================================================================
+.env
+.env.*
+*.env
+bigquery_key.json
+gcp_key.json
+*key*.json
+*credential*.json
+*secret*.json
+*.pem
+*.key
+
+# =============================================================================
+# DATA LAKE, CHECKPOINTS & LOCAL STORAGE (Không commit dữ liệu lớn lên Git)
+# =============================================================================
+data/
+data_0/
+data_1/
+state.json
+*.parquet
+*.csv
+*.tsv
+*.pkl
+*.joblib
+
+# =============================================================================
+# LOGS & TEMPORARY FILES (Nhật ký thực thi & file tạm atomic write)
+# =============================================================================
+*.log
+*.log.*
+logs/
+*.tmp
+*.tmp.*
+*.corrupt*
+*.bak
+*.swp
+*~
+
+# =============================================================================
+# PYTHON & VIRTUAL ENVIRONMENTS (Môi trường ảo & Cache bytecode)
+# =============================================================================
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+ENV/
+build/
+dist/
+*.egg-info/
+*.egg
+
+# =============================================================================
+# JUPYTER NOTEBOOK & TESTING ARTIFACTS
+# =============================================================================
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+.pytest_cache/
+.coverage
+htmlcov/
+
+# =============================================================================
+# DBT CORE BUILD ARTIFACTS & LOGS (Tầng biến đổi dbt)
+# =============================================================================
+dbt_hcmc_real_estate/target/
+dbt_hcmc_real_estate/dbt_packages/
+dbt_hcmc_real_estate/logs/
+dbt_hcmc_real_estate/.user.yml
+**/.user.yml
+
+# =============================================================================
+# IDE & OS METADATA (Cấu hình editor cá nhân & rác hệ điều hành)
+# =============================================================================
+.vscode/
+.idea/
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini

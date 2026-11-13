@@ -1,0 +1,33 @@
+name: 'dbt_hcmc_real_estate'
+version: '1.0.0'
+config-version: 2
+
+# This setting configures which "profile" dbt uses for this project.
+profile: 'dbt_hcmc_real_estate'
+
+# These configurations specify where dbt should look for different types of files.
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+  - "logs"
+
+# Medallion Architecture Model Configurations:
+# - Staging layer: materialized as view (lightweight, zero storage overhead in Sandbox)
+# - Intermediate layer: materialized as view (Entity Resolution & Deduplication, zero storage overhead)
+# - Marts layer: materialized as table (performant, standard table compatible with Sandbox)
+models:
+  dbt_hcmc_real_estate:
+    staging:
+      +materialized: view
+    intermediate:
+      +materialized: view
+    marts:
+      +materialized: table
+

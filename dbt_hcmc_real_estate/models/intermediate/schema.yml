@@ -1,0 +1,21 @@
+version: 2
+
+models:
+  - name: int_listings_deduplicated
+    description: "Intermediate view performing URL deduplication and entity resolution (cross-broker property deduplication)."
+    columns:
+      - name: link
+        description: "Primary key URL string representing the deduplicated listing."
+        tests:
+          - unique
+          - not_null
+      - name: property_fingerprint
+        description: "Physical property hash fingerprint used for entity resolution."
+        tests:
+          - unique
+          - not_null
+      - name: duplicate_broker_count
+        description: "Count of broker listings associated with this distinct physical property."
+        tests:
+          - not_null
+

@@ -1,0 +1,21 @@
+version: 2
+
+models:
+  - name: stg_listings
+    description: "Staging view containing cleaned column names and cast types from raw listings."
+    columns:
+      - name: link
+        description: "Original URL string of the listing."
+        tests:
+          - unique
+          - not_null
+      - name: listing_url
+        description: "Primary key / unique URL of the listing."
+        tests:
+          - unique
+          - not_null
+      - name: crawled_at
+        description: "Timestamp when the listing record was crawled."
+        tests:
+          - not_null
+

@@ -1,0 +1,58 @@
+# requirements.txt
+# Project: End-to-End ELT Pipeline & Price Classification for HCMC Real Estate
+# Python >= 3.10 / 3.11+
+# Tạo venv: python -m venv venv && venv\Scripts\activate && pip install -r requirements.txt
+
+# --- Data science core ---
+numpy==2.4.4
+pandas==3.0.2
+scipy==1.17.1
+scikit-learn==1.8.0
+imbalanced-learn==0.14.1
+xgboost==3.2.0
+statsmodels==0.14.6
+joblib==1.5.3
+
+# --- Visualization ---
+matplotlib==3.10.8
+seaborn==0.13.2
+
+# --- Geospatial ---
+geopy==2.4.1
+
+# --- File I/O & Parquet ---
+pyarrow>=15.0.0
+openpyxl==3.1.5
+opencv-python==4.13.0.92
+
+# --- Cloud Storage (Data Lake: Backblaze B2 S3 API) ---
+boto3>=1.34.0
+botocore>=1.34.0
+python-dotenv>=1.0.0
+
+# --- Data Warehouse & Transformation ---
+google-cloud-bigquery>=3.20.0
+dbt-bigquery>=1.8.0
+
+# --- Jupyter ---
+notebook
+ipykernel==7.2.0
+ipython==9.12.0
+
+# --- Crawler & Extraction ---
+# Lưu ý: undetected-chromedriver tự tải ChromeDriver khi chạy lần đầu
+selenium==4.44.0
+undetected-chromedriver==3.5.5
+setuptools==69.5.1  # undetected-chromedriver yêu cầu setuptools<70
+curl-cffi>=0.7.0
+scrapling>=0.5.1
+
+# --- Testing & Quality ---
+pytest>=9.0.0
+
+
+# --- Utilities & Resilience ---
+requests==2.34.2
+tenacity>=8.2.0
+tqdm==4.67.3
+
