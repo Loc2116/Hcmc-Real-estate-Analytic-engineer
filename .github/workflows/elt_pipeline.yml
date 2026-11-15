@@ -18,7 +18,11 @@ permissions:
 jobs:
   elt_daily_sync:
     name: Daily ELT Pipeline (Extract -> B2 Lake -> BigQuery -> dbt Star Schema)
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
+
+    defaults:
+      run:
+        shell: bash
 
     env:
       # Backblaze B2 (Data Lake)
@@ -37,15 +41,13 @@ jobs:
       - name: 1. Checkout Repository
         uses: actions/checkout@v4
 
-      - name: 2. Set up Python 3.12
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-          cache: 'pip'
-
-      - name: 3. Install Python Dependencies
+      - name: 2. Verify Python Environment
         run: |
-          python -m pip install --upgrade pip setuptools wheel
+          python --version
+          which python
+
+      - name: 3. Verify & Install Python Dependencies
+        run: |
           pip install -r requirements.txt
 
       - name: 4. Configure Google Cloud Credentials
@@ -64,7 +66,6 @@ jobs:
             echo "$GCP_SA_KEY" | base64 --decode > "${{ github.workspace }}/gcp_key.json"
           fi
 
-          chmod 600 "${{ github.workspace }}/gcp_key.json"
           echo "GCP Service Account key created successfully at ${{ github.workspace }}/gcp_key.json"
 
       - name: 5. Extract & Load to Data Lake (Crawler -> Backblaze B2)
