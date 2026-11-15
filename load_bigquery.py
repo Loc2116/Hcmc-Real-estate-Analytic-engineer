@@ -198,9 +198,20 @@ class BigQueryLoader:
         # Set environment variable for Google ADC
         if self.credentials_path and self.credentials_path.is_file():
             os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = str(self.credentials_path)
-            self.credentials = service_account.Credentials.from_service_account_file(
-                str(self.credentials_path)
-            )
+            try:
+                self.credentials = service_account.Credentials.from_service_account_file(
+                    str(self.credentials_path)
+                )
+            except Exception as cred_err:
+                # Fallback: seamlessly handle UTF-8 BOM or alternate encoding in JSON key
+                try:
+                    import json
+                    with open(self.credentials_path, "r", encoding="utf-8-sig") as jf:
+                        sa_info = json.load(jf)
+                    self.credentials = service_account.Credentials.from_service_account_info(sa_info)
+                except Exception:
+                    raise cred_err
+
             self.client = bigquery.Client(
                 project=self.project_id,
                 credentials=self.credentials,

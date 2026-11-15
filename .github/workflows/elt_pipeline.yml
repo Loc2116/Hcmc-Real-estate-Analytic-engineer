@@ -61,10 +61,11 @@ jobs:
 
           $keyFile = Join-Path $env:GITHUB_WORKSPACE "gcp_key.json"
           if ($env:GCP_SA_KEY.Trim().StartsWith("{")) {
-            $env:GCP_SA_KEY | Set-Content -Path $keyFile -Encoding utf8 -NoNewline
+            $bytes = [System.Text.Encoding]::UTF8.GetBytes($env:GCP_SA_KEY.Trim())
           } else {
-            [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($env:GCP_SA_KEY)) | Set-Content -Path $keyFile -Encoding utf8 -NoNewline
+            $bytes = [System.Convert]::FromBase64String($env:GCP_SA_KEY.Trim())
           }
+          [System.IO.File]::WriteAllBytes($keyFile, $bytes)
           Write-Host "GCP Service Account key created successfully at $keyFile"
 
       - name: 5. Extract & Load to Data Lake (Crawler -> Backblaze B2)
