@@ -22,7 +22,7 @@ jobs:
 
     defaults:
       run:
-        shell: bash
+        shell: powershell
 
     env:
       # Backblaze B2 (Data Lake)
@@ -44,7 +44,7 @@ jobs:
       - name: 2. Verify Python Environment
         run: |
           python --version
-          which python
+          Get-Command python | Select-Object -ExpandProperty Source
 
       - name: 3. Verify & Install Python Dependencies
         run: |
@@ -54,45 +54,46 @@ jobs:
         env:
           GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
         run: |
-          if [ -z "$GCP_SA_KEY" ]; then
-            echo "::error::Secret GCP_SA_KEY is empty or missing! Please configure GCP_SA_KEY in repository secrets."
+          if (-not $env:GCP_SA_KEY) {
+            Write-Error "Secret GCP_SA_KEY is empty or missing! Please configure GCP_SA_KEY in repository secrets."
             exit 1
-          fi
+          }
 
-          # Support both raw JSON and base64-encoded service account key
-          if echo "$GCP_SA_KEY" | grep -q '^{' ; then
-            echo "$GCP_SA_KEY" > "${{ github.workspace }}/gcp_key.json"
-          else
-            echo "$GCP_SA_KEY" | base64 --decode > "${{ github.workspace }}/gcp_key.json"
-          fi
-
-          echo "GCP Service Account key created successfully at ${{ github.workspace }}/gcp_key.json"
+          $keyFile = Join-Path $env:GITHUB_WORKSPACE "gcp_key.json"
+          if ($env:GCP_SA_KEY.Trim().StartsWith("{")) {
+            $env:GCP_SA_KEY | Set-Content -Path $keyFile -Encoding utf8 -NoNewline
+          } else {
+            [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($env:GCP_SA_KEY)) | Set-Content -Path $keyFile -Encoding utf8 -NoNewline
+          }
+          Write-Host "GCP Service Account key created successfully at $keyFile"
 
       - name: 5. Extract & Load to Data Lake (Crawler -> Backblaze B2)
         run: |
-          SAMPLES="${{ inputs.crawler_samples || '300' }}"
-          echo "Starting Scrapling Crawler with target $SAMPLES samples and auto B2 sync..."
-          python scrapling_crawler.py --samples "$SAMPLES" --early-stop 100 --upload-b2
+          $samples = if ("${{ inputs.crawler_samples }}") { "${{ inputs.crawler_samples }}" } else { "300" }
+          Write-Host "Starting Scrapling Crawler with target $samples samples and auto B2 sync..."
+          python scrapling_crawler.py --samples $samples --early-stop 100 --upload-b2
 
       - name: 6. Load to Data Warehouse (Backblaze B2 -> Google BigQuery)
         run: |
-          echo "Loading new Parquet partitions from Backblaze B2 into BigQuery staging & raw_listings..."
+          Write-Host "Loading new Parquet partitions from Backblaze B2 into BigQuery staging & raw_listings..."
           python load_bigquery.py
 
       - name: 7. Transform Data with dbt-bigquery (Medallion & Star Schema)
         run: |
-          echo "Running dbt transformations (stg_listings -> int_listings_deduplicated -> marts Star Schema)..."
+          Write-Host "Running dbt transformations (stg_listings -> int_listings_deduplicated -> marts Star Schema)..."
           python -m dbt.cli.main run --project-dir dbt_hcmc_real_estate --profiles-dir dbt_hcmc_real_estate
 
       - name: 8. Execute Data Quality Tests (dbt test)
         run: |
-          echo "Executing automated data quality tests across staging, intermediate, and marts..."
+          Write-Host "Executing automated data quality tests across staging, intermediate, and marts..."
           python -m dbt.cli.main test --project-dir dbt_hcmc_real_estate --profiles-dir dbt_hcmc_real_estate
 
       - name: 9. Cleanup Credentials
         if: always()
         run: |
-          echo "Cleaning up temporary credentials..."
-          rm -f "${{ github.workspace }}/gcp_key.json"
-          echo "Credentials file removed."
-
+          Write-Host "Cleaning up temporary credentials..."
+          $keyFile = Join-Path $env:GITHUB_WORKSPACE "gcp_key.json"
+          if (Test-Path $keyFile) {
+            Remove-Item $keyFile -Force
+          }
+          Write-Host "Credentials file removed."
