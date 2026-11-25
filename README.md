@@ -6,8 +6,11 @@
 [![Google BigQuery](https://img.shields.io/badge/Data%20Warehouse-Google%20BigQuery-4285F4.svg)](https://cloud.google.com/bigquery)
 [![Backblaze B2](https://img.shields.io/badge/Data%20Lake-Backblaze%20B2-red.svg)](https://www.backblaze.com/b2)
 [![Data Quality Tests](https://img.shields.io/badge/dbt%20tests-44%20passed%20(100%25)-brightgreen.svg)](https://github.com/Loc2116/Hcmc-Real-estate-Analytic-engineer)
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://hcmc-real-estate-analytic-engineer-eoor2dhqd9taqjfxqv2peu.streamlit.app/)
 
 > **A Production-Grade, End-to-End Modern Data Platform & Analytics Engineering Project** for Crawling, Storing, Modeling, Testing, and Visualizing Ho Chi Minh City Real Estate Market Data.
+>
+> 🔗 **Live Interactive Dashboard:** [HCMC Real Estate Market Intelligence (Streamlit Cloud)](https://hcmc-real-estate-analytic-engineer-eoor2dhqd9taqjfxqv2peu.streamlit.app/)
 
 ---
 
