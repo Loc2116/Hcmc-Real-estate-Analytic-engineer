@@ -57,10 +57,16 @@ st.markdown(
 
 
 def _read_gcp_secrets() -> tuple[Optional[dict], Optional[str], Optional[str]]:
-    """Safely extract Streamlit Cloud secrets if configured without crashing locally."""
+    """Safely extract Streamlit Cloud secrets (TOML table or raw JSON string) without crashing locally."""
     try:
         secrets = st.secrets
-        creds = dict(secrets["gcp_service_account"]) if "gcp_service_account" in secrets else None
+        creds = None
+        if "gcp_service_account" in secrets:
+            creds = dict(secrets["gcp_service_account"])
+        elif "GCP_SA_KEY" in secrets:
+            import json
+
+            creds = json.loads(secrets["GCP_SA_KEY"])
         project_id = secrets.get("GCP_PROJECT_ID")
         dataset_id = secrets.get("BIGQUERY_DATASET")
         return creds, project_id, dataset_id
@@ -532,3 +538,4 @@ with tab4:
         file_name="hcmc_real_estate_filtered.csv",
         mime="text/csv",
     )
+

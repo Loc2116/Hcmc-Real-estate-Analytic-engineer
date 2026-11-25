@@ -187,3 +187,17 @@ def test_load_mart_data_auto_falls_back_to_local_when_bq_fails(monkeypatch):
     assert "Local" in source_label
     assert warning is not None
 
+
+def test_load_mart_data_reports_both_errors_when_bq_and_local_fail(monkeypatch, tmp_path: Path):
+    def _boom(*args, **kwargs):
+        raise RuntimeError("Missing GCP credentials")
+
+    monkeypatch.setattr("dashboard_analytics.load_mart_from_bigquery", _boom)
+
+    with pytest.raises(RuntimeError, match="Missing GCP credentials"):
+        load_mart_data(
+            mode="auto",
+            parquet_path=tmp_path / "missing.parquet",
+            csv_path=tmp_path / "missing.csv",
+        )
+

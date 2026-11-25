@@ -230,9 +230,14 @@ def load_mart_data(
         )
         return df, src, None
     except Exception as bq_exc:
-        df, src = load_mart_from_local(parquet_path=parquet_path, csv_path=csv_path)
-        warning = f"Đang dùng dữ liệu snapshot cục bộ do chưa kết nối BigQuery ({bq_exc})."
-        return df, src, warning
+        try:
+            df, src = load_mart_from_local(parquet_path=parquet_path, csv_path=csv_path)
+            warning = f"Đang dùng dữ liệu snapshot cục bộ do chưa kết nối BigQuery ({bq_exc})."
+            return df, src, warning
+        except FileNotFoundError as local_exc:
+            raise RuntimeError(
+                f"Không thể kết nối BigQuery ({bq_exc}) và cũng không có snapshot cục bộ ({local_exc})."
+            ) from local_exc
 
 
 def compute_kpis(df: pd.DataFrame) -> Dict[str, Optional[float]]:
@@ -352,3 +357,4 @@ def compute_lane_width_elasticity(df: pd.DataFrame) -> Dict[str, Any]:
         "bucket_summary": bucket_summary,
         "valid_df": valid,
     }
+
