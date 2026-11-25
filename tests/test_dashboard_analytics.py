@@ -23,6 +23,7 @@ from dashboard_analytics import (
     format_district_label,
     load_mart_data,
     load_mart_from_local,
+    normalize_service_account_info,
     prepare_listings_df,
     summarize_by_dimension,
 )
@@ -200,4 +201,22 @@ def test_load_mart_data_reports_both_errors_when_bq_and_local_fail(monkeypatch, 
             parquet_path=tmp_path / "missing.parquet",
             csv_path=tmp_path / "missing.csv",
         )
+
+
+def test_normalize_service_account_info_fills_token_uri_and_newlines():
+    normalized = normalize_service_account_info(
+        {
+            "project_id": "demo-proj",
+            "client_email": "bot@demo-proj.iam.gserviceaccount.com",
+            "private_key": "line1\\nline2",
+        }
+    )
+    assert normalized["token_uri"] == "https://oauth2.googleapis.com/token"
+    assert normalized["type"] == "service_account"
+    assert normalized["private_key"] == "line1\nline2"
+
+
+def test_normalize_service_account_info_reports_missing_required_fields():
+    with pytest.raises(ValueError, match="client_email"):
+        normalize_service_account_info({"project_id": "demo-proj"})
 

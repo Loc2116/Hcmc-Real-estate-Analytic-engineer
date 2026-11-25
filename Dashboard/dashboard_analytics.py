@@ -155,6 +155,29 @@ def load_mart_from_local(
     )
 
 
+def normalize_service_account_info(credentials_info: Mapping[str, Any]) -> Dict[str, Any]:
+    """Normalize service account mapping from Streamlit secrets or JSON into google-auth format."""
+    creds_dict = {str(k): v for k, v in dict(credentials_info).items()}
+
+    if isinstance(creds_dict.get("private_key"), str):
+        pk = creds_dict["private_key"]
+        if "\\n" in pk and "\n" not in pk:
+            pk = pk.replace("\\n", "\n")
+        creds_dict["private_key"] = pk
+
+    creds_dict.setdefault("type", "service_account")
+    creds_dict.setdefault("auth_uri", "https://accounts.google.com/o/oauth2/auth")
+    creds_dict.setdefault("token_uri", "https://oauth2.googleapis.com/token")
+
+    missing = [f for f in ("client_email", "private_key", "token_uri") if not creds_dict.get(f)]
+    if missing:
+        present_keys = sorted(creds_dict.keys())
+        raise ValueError(
+            f"Service account thiếu trường bắt buộc: {missing}. Các trường hiện có: {present_keys}"
+        )
+    return creds_dict
+
+
 def load_mart_from_bigquery(
     project_id: Optional[str] = None,
     dataset_id: Optional[str] = None,
@@ -172,8 +195,9 @@ def load_mart_from_bigquery(
     if credentials_info:
         from google.oauth2 import service_account
 
-        creds = service_account.Credentials.from_service_account_info(dict(credentials_info))
-        resolved_project = resolved_project or str(credentials_info.get("project_id", "")).strip()
+        normalized_info = normalize_service_account_info(credentials_info)
+        creds = service_account.Credentials.from_service_account_info(normalized_info)
+        resolved_project = resolved_project or str(normalized_info.get("project_id", "")).strip()
         client = bigquery.Client(project=resolved_project or None, credentials=creds)
     else:
         cred_file = credentials_path or os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "")

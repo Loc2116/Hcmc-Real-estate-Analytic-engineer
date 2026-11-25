@@ -56,22 +56,36 @@ st.markdown(
 )
 
 
+def _parse_sa_json(raw_json: str) -> dict:
+    import json
+
+    text = raw_json.strip()
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        return json.loads(text, strict=False)
+
+
 def _read_gcp_secrets() -> tuple[Optional[dict], Optional[str], Optional[str]]:
-    """Safely extract Streamlit Cloud secrets (TOML table or raw JSON string) without crashing locally."""
+    """Safely extract Streamlit Cloud secrets (TOML table, top-level keys, or raw JSON string)."""
     try:
         secrets = st.secrets
-        creds = None
-        if "gcp_service_account" in secrets:
-            creds = dict(secrets["gcp_service_account"])
-        elif "GCP_SA_KEY" in secrets:
-            import json
-
-            creds = json.loads(secrets["GCP_SA_KEY"])
-        project_id = secrets.get("GCP_PROJECT_ID")
-        dataset_id = secrets.get("BIGQUERY_DATASET")
-        return creds, project_id, dataset_id
+        _ = len(secrets)
     except Exception:
         return None, None, None
+
+    candidates: list[dict] = []
+    if "GCP_SA_KEY" in secrets and secrets["GCP_SA_KEY"]:
+        candidates.append(_parse_sa_json(str(secrets["GCP_SA_KEY"])))
+    if "gcp_service_account" in secrets:
+        candidates.append(dict(secrets["gcp_service_account"]))
+    if "private_key" in secrets and "client_email" in secrets:
+        candidates.append({k: secrets[k] for k in secrets.keys() if not isinstance(secrets[k], dict)})
+
+    creds = max(candidates, key=lambda d: len(d)) if candidates else None
+    project_id = secrets.get("GCP_PROJECT_ID")
+    dataset_id = secrets.get("BIGQUERY_DATASET")
+    return creds, project_id, dataset_id
 
 
 @st.cache_data(ttl=3600, show_spinner="Đang đồng bộ dữ liệu từ tầng Marts...")
