@@ -187,6 +187,10 @@ python -m dbt.cli.main run --project-dir dbt_hcmc_real_estate --profiles-dir dbt
 
 # 4. Thực thi kiểm thử chất lượng dữ liệu
 python -m dbt.cli.main test --project-dir dbt_hcmc_real_estate --profiles-dir dbt_hcmc_real_estate
+
+# 5. (Tùy chọn) Xuất snapshot Mart về local & chạy Streamlit Dashboard tự động
+python export_mart.py --format both
+python -m streamlit run Dashboard/app.py
 ```
 
 ---
@@ -208,7 +212,12 @@ Hcmc-Real-estate-Analytic-engineer/
 ├── Module/                      # Notebooks nghiên cứu & module cào dữ liệu gốc
 ├── .env.example                 # Mẫu cấu hình biến môi trường an toàn
 ├── .gitignore                   # Loại trừ toàn bộ credentials, state và dữ liệu nặng
+├── Dashboard/                   # Streamlit Market Intelligence Dashboard
+│   ├── app.py                   # Ứng dụng Streamlit (Auto BigQuery / Local Parquet)
+│   ├── dashboard_analytics.py   # Module xử lý & tổng hợp chỉ số thị trường
+│   └── open_dashboard.bat       # Shortcut mở nhanh bằng double-click trên Windows
 ├── CODEBOOK.md                  # Từ điển dữ liệu chuẩn tiếng Anh (100% English snake_case)
+├── export_mart.py               # Script xuất mart_listings_clean ra CSV/Parquet
 ├── gemini.md                    # File ngữ cảnh kiến trúc hệ thống phục vụ AI & Developers
 ├── load_bigquery.py             # Script nạp dữ liệu Idempotent từ B2 vào BigQuery
 ├── README.md                    # Tài liệu chính của dự án

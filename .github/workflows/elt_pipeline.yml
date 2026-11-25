@@ -89,7 +89,12 @@ jobs:
           Write-Host "Executing automated data quality tests across staging, intermediate, and marts..."
           python -m dbt.cli.main test --project-dir dbt_hcmc_real_estate --profiles-dir dbt_hcmc_real_estate
 
-      - name: 9. Cleanup Credentials
+      - name: 9. Export Clean Mart Snapshot (for Dashboard/BI)
+        run: |
+          Write-Host "Exporting mart_listings_clean to data_exports/ for Streamlit Dashboard..."
+          python export_mart.py --format both
+
+      - name: 10. Cleanup Credentials
         if: always()
         run: |
           Write-Host "Cleaning up temporary credentials..."
